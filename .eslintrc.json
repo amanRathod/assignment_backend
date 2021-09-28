@@ -1,0 +1,8 @@
+{
+  "extends": "strongloop",
+  "parserOptions": {
+    "sourceType": "module"
+  },
+  "parser": "babel-eslint"
+
+}
