@@ -1,8 +1,10 @@
 const mongoose = require('mongoose');
+const AutoIncrement = require('mongoose-sequence')(mongoose);
 const Schema = mongoose.Schema;
 
 // submission assignment schema definition
-const submissionSchema = new Schema({
+const SubmissionSchema = new Schema({
+  id: Number,
   assignment: {
     type: Schema.Types.ObjectId,
     ref: 'Assignment',
@@ -44,5 +46,7 @@ const submissionSchema = new Schema({
   timestamps: true,
 });
 
-const Submission = mongoose.model('Submission', submissionSchema);
+SubmissionSchema.plugin(AutoIncrement, {inc_field: 'id'});
+
+const Submission = mongoose.model('Submission', SubmissionSchema);
 module.exports = Submission;

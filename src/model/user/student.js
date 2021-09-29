@@ -2,26 +2,25 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const studentSchema = new Schema({
-  registration_no: {
-    type: String,
-    required: true,
-  },
   assignment: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Assignment',
+    ref: 'Submission',
   }],
-  teaching_assistant: [{
+  ta_id: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'TeachingAssistant',
+    ref: 'TA',
   }],
   grade: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Grade',
   }],
-  user: {
+  assigned: {
+    type: Boolean,
+    default: false,
+  },
+  student_id: {
     type: Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
   },
 }, {
   timestamps: true,

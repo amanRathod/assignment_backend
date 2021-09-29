@@ -3,11 +3,10 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 // teaching assistant for assignment work
-const teachingAssistantSchema = new Schema({
-  user: {
+const TASchema = new Schema({
+  ta_id: {
     type: Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
   },
   assignment: [{
     type: Schema.Types.ObjectId,
@@ -15,11 +14,11 @@ const teachingAssistantSchema = new Schema({
   }],
   assign_student: [{
     type: Schema.Types.ObjectId,
-    ref: 'Student',
+    ref: 'User',
   }],
 }, {
   timestamps: true,
 });
 
-const TeachingAssistant = mongoose.model('TeachingAssistant', teachingAssistantSchema);
-module.exports = TeachingAssistant;
+const TA = mongoose.model('TA', TASchema);
+module.exports = TA;

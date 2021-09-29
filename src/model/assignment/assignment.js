@@ -1,8 +1,10 @@
 const mongoose = require('mongoose');
+const AutoIncrement = require('mongoose-sequence')(mongoose);
 const Schema = mongoose.Schema;
 
 // assignment schema definition
 const AssignmentSchema = new Schema({
+  id: Number,
   name: {
     type: String,
     required: true,
@@ -44,6 +46,8 @@ const AssignmentSchema = new Schema({
 }, {
   timestamps: true,
 });
+
+AssignmentSchema.plugin(AutoIncrement, {inc_field: 'id'});
 
 const Assignment = mongoose.model('Assignment', AssignmentSchema);
 module.exports = Assignment;
