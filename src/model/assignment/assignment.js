@@ -1,11 +1,11 @@
 const mongoose = require('mongoose');
-const AutoIncrement = require('mongoose-sequence')(mongoose);
+//  const AutoIncrement = require('mongoose-sequence')(mongoose);
 const Schema = mongoose.Schema;
 
 // assignment schema definition
 const AssignmentSchema = new Schema({
-  id: Number,
-  name: {
+  // id: Number,
+  title: {
     type: String,
     required: true,
   },
@@ -32,12 +32,17 @@ const AssignmentSchema = new Schema({
   status: {
     type: String,
     enum: ['inactive', 'active', 'completed'],
-    required: true,
+    default: 'inactive',
   },
-  totalGrade: {
+  totalMarks: {
     type: Number,
     required: true,
     default: 100,
+  },
+  assigned_TA: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
   },
   submission: [{
     type: Schema.Types.ObjectId,
@@ -47,7 +52,7 @@ const AssignmentSchema = new Schema({
   timestamps: true,
 });
 
-AssignmentSchema.plugin(AutoIncrement, {inc_field: 'id'});
+// AssignmentSchema.plugin(AutoIncrement, {inc_field: 'id'});
 
 const Assignment = mongoose.model('Assignment', AssignmentSchema);
 module.exports = Assignment;

@@ -16,6 +16,10 @@ const TASchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'User',
   }],
+  assigned: {
+    type: Boolean,
+    default: false,
+  },
 }, {
   timestamps: true,
 });

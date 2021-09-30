@@ -1,11 +1,15 @@
 /* eslint-disable max-len */
 const { validationResult } = require('express-validator');
+const multer = require('multer');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../../../../model/user/user');
 const Student = require('../../../../model/user/student');
 const TA = require('../../../../model/user/teacher');
 const Admin = require('../../../../model/user/admin');
+const { uploadFile } = require('../../../../../s3');
+
+const upload = multer({dest: 'Images/'});
 
 exports.login = async(req, res, next) => {
   try {
@@ -57,7 +61,7 @@ exports.register = async(req, res) => {
     // validate user input data
     const error = validationResult(req);
     if (!error) {
-      res.send(404).json({
+      return res.send(404).json({
         type: 'warning',
         message: error.array()[0].msg,
       });
@@ -98,6 +102,7 @@ exports.register = async(req, res) => {
       name,
       user_type,
       registration_no,
+      avatar: 'https://bucket-007.s3.ap-south-1.amazonaws.com/default.png',
     });
 
     let user_role;
@@ -120,7 +125,7 @@ exports.register = async(req, res) => {
 
   } catch (err) {
     console.log(err);
-    res.status(500).json({
+    return res.status(500).json({
       type: 'error',
       message: 'Server is Invalid',
     });
@@ -132,6 +137,12 @@ exports.updateProfile = async(req, res) => {
 
     // destructure the request body
     const { email, id } = req.user;
+
+    if (req.file) {
+      upload.single('image');
+      const avatar = uploadFile(req.file);
+      req.body.avatar = avatar;
+    }
 
     // update User profile
     const user = await User.findOneAndUpdate({ email }, { $set: req.body }, { new: true });
@@ -153,7 +164,7 @@ exports.updateProfile = async(req, res) => {
 
   } catch (err) {
     console.log(err);
-    res.status(500).json({
+    return res.status(500).json({
       type: 'error',
       message: 'Server is Invalid',
     });

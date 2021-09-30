@@ -5,17 +5,17 @@ const Schema = mongoose.Schema;
 // submission assignment schema definition
 const SubmissionSchema = new Schema({
   id: Number,
-  assignment: {
+  assignmentId: {
     type: Schema.Types.ObjectId,
     ref: 'Assignment',
     required: true,
   },
-  student: {
+  student_id: {
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true,
   },
-  teaching_assistant: {
+  ta_id: {
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true,
@@ -35,12 +35,12 @@ const SubmissionSchema = new Schema({
   },
   submission_date: {
     type: Date,
-    required: true,
+    default: Date.now(),
   },
   submission_status: {
     type: String,
-    enum: ['submitted', 'rejected'],
-    required: true,
+    enum: ['submitted', 'rejected', 'accepted'],
+    default: 'submitted',
   },
 }, {
   timestamps: true,

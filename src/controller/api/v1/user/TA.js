@@ -20,7 +20,7 @@ exports.getAssignStudents = async(req, res) => {
 
   } catch (err) {
     console.log(err);
-    res.status(500).json({
+    return res.status(500).json({
       type: 'error',
       message: 'Invalid Server',
     });

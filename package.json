@@ -21,6 +21,7 @@
     "nodemon": "^2.0.13"
   },
   "dependencies": {
+    "aws-sdk": "^2.997.0",
     "axios": "^0.21.4",
     "bcrypt": "^5.0.1",
     "bcryptjs": "^2.4.3",
@@ -37,6 +38,7 @@
     "mongoose-sequence": "^5.3.1",
     "mongoose-unique-validator": "^2.0.3",
     "morgan": "^1.10.0",
+    "multer": "^1.4.3",
     "nodemailer": "^6.6.5",
     "nodemailer-sendgrid": "^1.0.3",
     "path": "^0.12.7",

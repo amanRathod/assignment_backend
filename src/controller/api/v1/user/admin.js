@@ -35,7 +35,6 @@ exports.assignStudentToTA = async(req, res) => {
     const students = await Student.find({student_id: {$in: student_ids}});
     students.forEach((student) => {
       student.ta_id = student.ta_id.concat(ta_id).filter((id, index) => ta_id.indexOf(id) === index);
-      console.log('ss', student.ta_id);
       student.assigned = true;
       student.save();
     });
@@ -70,13 +69,13 @@ exports.removeStudent = async(req, res) => {
 
     // veify TA Id and Student Id
     if (!student || !ta) {
-      res.status(404).json({
+      return res.status(404).json({
         type: 'warning',
         message: 'student_id or ta_id doesn\'t exists',
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       type: 'success',
       message: 'Student removed from assigned TA',
     });

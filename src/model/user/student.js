@@ -4,15 +4,15 @@ const Schema = mongoose.Schema;
 const studentSchema = new Schema({
   assignment: [{
     type: mongoose.Schema.Types.ObjectId,
+    ref: 'Assignment',
+  }],
+  submittedAssignment: [{
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'Submission',
   }],
   ta_id: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'TA',
-  }],
-  grade: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Grade',
   }],
   assigned: {
     type: Boolean,

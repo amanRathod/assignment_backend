@@ -5,10 +5,7 @@ const dotenv = require('dotenv');
 const morgan = require('morgan');
 const express = require('express');
 const ConnectDB = require('./config/db');
-const jwt = require('jsonwebtoken');
-const axios = require('axios');
 const cookieParser = require('cookie-parser');
-const queryString = require('query-string');
 
 async function startServer() {
   const app = express();
