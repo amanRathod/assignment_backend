@@ -15,7 +15,6 @@ router.post('/register', [
   check('email').isEmail(),
   check('password').isLength({ min: 8 }),
   check('name').isEmpty(),
-  check('registration_no').isAlpha(),
 ], User.register);
 
 router.post('/forgotPassword', [

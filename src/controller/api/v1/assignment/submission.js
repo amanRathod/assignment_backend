@@ -26,27 +26,29 @@ exports.submit = async(req, res) => {
     // const filePath = uploadFile(req.file);
     const filePath = 'https://bucket-007.s3.ap-south-1.amazonaws.com/CUP-+Batch-1-+2021-Assignment-5.pdf';
 
-    const submit = await Submission.create({
+    // create Submission collection
+    const submission = await Submission.create({
       ...req.body,
-      student_id: req.user._id,
       filePath,
+      student_id: req.user._id,
     });
 
-    // add submitted assignment Id into submittedAssignment array attribute of Student model with no duplicate Id
-    const student = await Student.findOne({student_id: req.user._id});
-    student.submittedAssignment = student.submittedAssignment.concat(submit._id).filter((id, index) => student.subbmitedAssignment.indexOf(id) === index);
-    student.save();
+    // update student collection
+    await Student.findByIdAndUpdate({_id: req.user._id}, {
+      $addToSet: {submittedAssignment: submission._id},
+    });
 
-    return res.status(201).json({
+    return res.status(200).json({
       type: 'success',
-      message: 'Assignment Submitted',
+      message: 'Assignment submitted',
+      data: submission,
     });
 
   } catch (err) {
     console.log(err);
     return res.status(500).json({
-      type: 'error',
-      message: err.message,
+      success: false,
+      message: 'Server Error',
     });
   }
 };
@@ -64,9 +66,8 @@ exports.evaluate = async(req, res) => {
 
     const { grade, assignmentId, submission_status } = req.body;
 
-    // check if assignment exists
-    const assignment = await Submission.findById({_id: assignmentId});
-    if (!assignment) {
+    const assignmentExists = await Submission.findById({_id: assignmentId});
+    if (!assignmentExists) {
       return res.status(404).json({
         type: 'error',
         message: 'Assignment not found',
@@ -75,26 +76,28 @@ exports.evaluate = async(req, res) => {
 
     // check if TA has right to evalute the assignment of particular student
     const ta = await TA.findOne({_id: req.user._id});
-    const rightToGrade = ta.assign_student.include(assignment.student_id);
-    if (!rightToGrade) {
-      return res.status(404).json({
-        type: 'warning',
-        message: 'You dont\t have right to grade this assignment',
+    if (!ta.assignment.includes(assignmentId)) {
+      return res.status(403).json({
+        type: 'error',
+        message: 'You are not authorized to evaluate this assignment',
       });
     }
 
     //  evalute assingment by grading
-    await Submission.updateMany({grade, submission_status});
+    await Submission.findByIdAndUpdate({_id: assignmentId}, {
+      grade,
+      submission_status,
+    });
 
-    return res.status(201).json({
+    return res.status(200).json({
       type: 'success',
-      message: 'assignment evaluated',
+      message: 'Assignment evaluated',
     });
 
   } catch (err) {
     console.log(err);
     return res.status(500).json({
-      type: 'error',
+      success: false,
       message: 'Server Error',
     });
   }
@@ -111,20 +114,23 @@ exports.comment = async(req, res) => {
       });
     }
 
-    const { assignmentId } = req.body;
+    // create comment collection
+    const comment = await Comment.create({
+      ...req.body,
+      student_id: req.user._id,
+    });
 
-    const assignmentExists = await Submission.findById({_id: assignmentId});
-    if (!assignmentExists) {
+    // update submission collection
+    const submission_idExists = await Submission.findByIdAndUpdate({_id: req.body.submission_id}, {
+      $addToSet: {comment: comment._id},
+    });
+
+    if (!submission_idExists) {
       return res.status(404).json({
         type: 'error',
         message: 'Assignment not found',
       });
     }
-
-    const comment = await Comment.create({
-      ...req.body,
-      userId: req.user._id,
-    });
 
     return res.status(200).json({
       type: 'success',
@@ -135,8 +141,8 @@ exports.comment = async(req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(500).json({
-      type: 'error',
-      message: 'server error',
+      success: false,
+      message: 'Server Error',
     });
   }
 };

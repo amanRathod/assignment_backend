@@ -26,12 +26,17 @@ exports.login = async(req, res, next) => {
     const { email, password } = req.body;
 
     // verify user email
-    const user = await User.findOne({ email });
+    const user = await User.findOne({email: email});
+    if (!user) {
+      return res.status(404).json({
+        type: 'error',
+        message: 'User email or passowrd is incorrect',
+      });
+    }
 
     // verify User password
     const isMatch = await bcrypt.compare(password, user.password);
-
-    if (!user || !isMatch) {
+    if (!isMatch) {
       return res.status(404).json({
         type: 'error',
         message: 'User email or passowrd is incorrect',
@@ -46,9 +51,11 @@ exports.login = async(req, res, next) => {
       token,
       email,
       user_type: user.user_type,
+      bool: !!user.registration_no,
     });
 
   } catch (err) {
+    console.log(err);
     return res.status(500).json({
       type: 'error',
       message: 'Server is Invalid',
@@ -70,24 +77,12 @@ exports.register = async(req, res) => {
     // destructure the request body
     const { email, password, user_type, name } = req.body;
 
-    // unique registration number according to user_type (eg: Student-1, TA-1, etc)
-    const registration_no = `${user_type}-${req.body.registration_no}`;
-
     // email must be unique
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({
         type: 'warning',
         message: 'User already exists',
-      });
-    }
-
-    // registration number must be unique
-    const registration_No = await User.findOne({ registration_no });
-    if (registration_No) {
-      return res.status(400).json({
-        type: 'warning',
-        message: 'Registration number already exists',
       });
     }
 
@@ -101,7 +96,6 @@ exports.register = async(req, res) => {
       password: hashedPassword,
       name,
       user_type,
-      registration_no,
       avatar: 'https://bucket-007.s3.ap-south-1.amazonaws.com/default.png',
     });
 
@@ -138,10 +132,32 @@ exports.updateProfile = async(req, res) => {
     // destructure the request body
     const { email, id } = req.user;
 
+    const userExists = await User.findOne({ email });
+    if (!userExists) {
+      return res.status(404).json({
+        type: 'error',
+        message: 'User doesn\t exists',
+      });
+    }
+
     if (req.file) {
       upload.single('image');
       const avatar = uploadFile(req.file);
       req.body.avatar = avatar;
+    }
+
+    if (req.body.registration_no) {
+      const registration_no = `${userExists.user_type}-${req.body.registration_no}`;
+
+      // check if registration_no is unique or not
+      const registration_No = await User.findOne({ registration_no });
+      if (registration_No) {
+        return res.status(400).json({
+          type: 'warning',
+          message: 'Registration number already exists',
+        });
+      }
+
     }
 
     // update User profile
@@ -160,6 +176,7 @@ exports.updateProfile = async(req, res) => {
     return res.status(200).json({
       type: 'success',
       message: 'User profile updated',
+      data: user.user_type,
     });
 
   } catch (err) {

@@ -12,16 +12,17 @@ const userSchema = new Schema({
   },
   password: {
     type: String,
-    required: true,
   },
   registration_no: {
     type: String,
-    required: true,
   },
   phone: {
     type: String,
   },
   avatar: {
+    type: String,
+  },
+  institute: {
     type: String,
   },
   dateOfBirth: {
@@ -30,7 +31,6 @@ const userSchema = new Schema({
   user_type: {
     type: String,
     enum: ['Student', 'TA', 'Admin'],
-    required: true,
     default: 'Student',
   },
   // user ref id according to user_type

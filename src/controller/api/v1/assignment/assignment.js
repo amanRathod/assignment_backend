@@ -12,7 +12,7 @@ const upload = multer({ dest: 'uploads/' });
 
 exports.createAssignment = async(req, res) => {
   try {
-    // // validate user input data
+    // validate client data
     const error = validationResult(req);
     if (!error.isEmpty()) {
       return res.status(422).json({
@@ -21,37 +21,56 @@ exports.createAssignment = async(req, res) => {
       });
     }
 
+    //  multer to upload file
+    const file = req.file;
+    if (!file) {
+      return res.status(422).json({
+        type: 'warning',
+        message: 'Please upload a file',
+      });
+    }
+
     // multer to get file path
     // upload.single('image');
     // get url from s3 bucket
-    // const filePath = await uploadFile(req.file);
+    // upload file to s3
+    // const filePath = await uploadFile(file);
     const filePath = 'https://bucket-007.s3.ap-south-1.amazonaws.com/CUP-+Batch-1-+2021-Assignment-5.pdf';
 
-    // create assignment
+    // create new assignment
     const assignment = new Assignment({
       ...req.body,
       filePath,
     });
     await assignment.save();
 
-    // add assignment id into admin's assignment array
+    // add assignment id into admin's assignment array with no duplicates assignment id
     const admin = await Admin.findOne({admin_id: req.user._id});
-    admin.assignment = admin.assignment.concat(assignment._id).filter((id, index) => admin.assignment.indexOf(id) === index);
+    const adminAssignment = admin.assignment.filter(assignment_id => assignment_id !== assignment._id);
+    adminAssignment.push(assignment._id);
+    admin.assignment = adminAssignment;
     await admin.save();
 
     return res.status(201).json({
       type: 'success',
-      message: 'assignment created',
+      message: 'Assignment created',
+      data: {
+        assignmentId: assignment._id,
+        filePath,
+      },
     });
 
   } catch (err) {
-    console.log(err);
+    return res.status(500).json({
+      status: 'error',
+      message: err.message,
+    });
   }
 };
 
 exports.assignedAssignment = async(req, res) => {
   try {
-    // validate user input data
+    // validate client data
     const error = validationResult(req);
     if (!error.isEmpty()) {
       return res.status(422).json({
@@ -63,11 +82,20 @@ exports.assignedAssignment = async(req, res) => {
     const { ta_id, assignmentId } = req.body;
 
     // verify TA Id
-    const ta = await TA.findOne({ta_id});
+    const ta = await TA.findOne(ta_id);
     if (!ta) {
       return res.status(404).json({
-        type: 'error',
+        type: 'warning',
         message: 'TA not found',
+      });
+    }
+
+    const assignment = await Assignment.findById({_id: assignmentId});
+
+    if (!assignment) {
+      return res.status(404).json({
+        type: 'error',
+        message: 'assignment not found',
       });
     }
 
@@ -76,6 +104,7 @@ exports.assignedAssignment = async(req, res) => {
     taAssignment.push(assignmentId);
     ta.assignment = taAssignment;
     await ta.save();
+
 
     // update student assignment with no duplicates assignment id
     const assignStudents = ta.assign_student;
@@ -87,13 +116,16 @@ exports.assignedAssignment = async(req, res) => {
       await student.save();
     }
 
-    return res.status(201).json({
+    return res.status(200).json({
       type: 'success',
-      message: 'Assigned to Teaching assistant',
+      message: 'Assignment assigned to TA',
     });
 
   } catch (err) {
-    console.log(err);
+    return res.status(500).json({
+      status: 'error',
+      message: err.message,
+    });
   }
 };
 
@@ -109,6 +141,8 @@ exports.updateAssignment = async(req, res) => {
     }
 
     const { assignmentId } = req.body;
+
+    // update assignment in Assignment collection
     const assignment = await Assignment.findByIdAndUpdate({_id: assignmentId}, req.body);
 
     if (!assignment) {
@@ -124,10 +158,9 @@ exports.updateAssignment = async(req, res) => {
     });
 
   } catch (err) {
-    console.log(err);
     return res.status(500).json({
-      type: 'error',
-      message: 'Server Error',
+      status: 'error',
+      message: err.message,
     });
   }
 };
@@ -144,8 +177,9 @@ exports.deleteAssignment = async(req, res) => {
     }
 
     const { assignmentId } = req.body;
-    const assignment = await Assignment.findByIdAndDelete({_id: assignmentId});
 
+    // delete assignment from Assignment collection
+    const assignment = await Assignment.findByIdAndDelete({_id: assignmentId});
     if (!assignment) {
       return res.status(404).json({
         type: 'error',
@@ -153,13 +187,22 @@ exports.deleteAssignment = async(req, res) => {
       });
     }
 
+    // delete assignment Id from admin's assignment array
+    const admin = await Admin.findOne({admin_id: req.user._id});
+    const adminAssignment = admin.assignment.filter(assignment_id => assignment_id !== assignmentId);
+    admin.assignment = adminAssignment;
+    await admin.save();
+
+
     return res.status(200).json({
       type: 'success',
       message: 'Assignment deleted',
     });
 
   } catch (err) {
-    console.log(err);
-    return res.send(err.message);
+    return res.status(500).json({
+      status: 'error',
+      message: err.message,
+    });
   }
 };

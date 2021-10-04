@@ -3,8 +3,8 @@ const express = require('express');
 const app = express();
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
-const queryString = require('query-string');
 const redirectURI = 'auth/google';
+const User = require('../../../../model/user/user');
 
 // get the auth URL
 function getGoogleAuthURL() {
@@ -21,90 +21,93 @@ function getGoogleAuthURL() {
     ].join(' '),
   };
 
-  return `${rootUrl}?${queryString.stringify(options)}`;
+  return `${rootUrl}?${new URLSearchParams(options)}`;
 }
 
 // Getting login URL
-app.get('/auth/google/url', (req, res) => {
+app.get('/google/url', (req, res) => {
+  console.log('urll');
   return res.send(getGoogleAuthURL());
 });
 
-function getTokens({
-  code,
-  clientId,
-  clientSecret,
-  redirectUri,
-}) {
-  const url = 'https://oauth2.googleapis.com/token';
-  const values = {
-    code,
-    client_id: clientId,
-    client_secret: clientSecret,
-    redirect_uri: redirectUri,
-    grant_type: 'authorization_code',
-  };
-
-  return axios
-    .post(url, JSON.stringify(values), {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-    .then((res) => res.data)
-    .catch((error) => {
-      throw new Error(error.message);
-    });
-}
+const getGoogleToken = async(code) => {
+  try {
+    // get the access token from google server using the code from the url query
+    const url = 'https://oauth2.googleapis.com/token';
+    const params = {
+      code,
+      client_id: process.env.GOOGLE_CLIENT_ID,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET,
+      redirect_uri: `http://localhost:5000/${redirectURI}`,
+      grant_type: 'authorization_code',
+    };
+    const response = await axios.post(url, params);
+    return response.data;
+  } catch (error) {
+    console.log(error);
+  }
+};
 
 // Getting the user from Google with the code
-app.get(`/${redirectURI}`, async(req, res) => {
-  const code = req.query.code;
+app.get('/google', async(req, res) => {
+  try {
+    // get code from the request
+    const { code } = req.query;
 
-  const { id_token, access_token } = await getTokens({
-    code,
-    clientId: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    redirectUri: `http://localhost:5000/${redirectURI}`,
-  });
+    // get the token from google
+    const token = await getGoogleToken(code);
+    const { access_token } = token;
 
-
-  // Fetch the user's profile with the access token and bearer
-  const googleUser = await axios
-    .get(
-      `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${access_token}`,
-      {
-        headers: {
-          Authorization: `Bearer ${id_token}`,
-        },
-      }
-    )
-    .then((res) => res.data)
-    .catch((error) => {
-      console.error('Failed to fetch user');
-      throw new Error(error.message);
+    // get the user info from google
+    const { data } = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', {
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+      },
     });
 
-  const token = jwt.sign(googleUser, process.env.JWT_SECRET_KEY);
-  console.log('tokennn', token);
-  res.cookie(process.env.COOKIE_NAME, token, {
-    maxAge: 900000,
-    httpOnly: true,
-    secure: false,
-  });
+    // destructure the data
+    const { email, name, picture } = data;
 
-  res.redirect('http://localhost:3000');
+    // Check if user already exists
+    let user = await User.findOne({ email });
+    if (!user) {
+      const newUser = new User({
+        email,
+        name,
+        avatar: picture,
+      });
+      await newUser.save();
+      user = newUser;
+    }
+
+    // create jwt token
+    const jwt_token = jwt.sign({id: user._id, email: user.email}, process.env.JWT_SECRET_KEY);
+
+    // send the token to the client side as cookie
+    res.cookie('token', jwt_token, { httpOnly: true });
+    res.cookie('user', email, { httpOnly: false });
+
+    // redirect to dashboard if user have already filled the personal details
+    if (user.registration_no) {
+      res.redirect(`http://localhost:3000/${user.user_type}/dashboard`);
+    } else {
+      res.redirect('http://localhost:3000/personal-details');
+    }
+  } catch (error) {
+    console.log(error);
+  }
 });
 
-// Getting the current user
-app.get('/auth/me', (req, res) => {
-  console.log('get me');
+// Getting the current user middleware
+app.get('/me', (req, res) => {
   try {
-    const decoded = jwt.verify(req.cookies['auth_google'], process.env.JWT_SECRET_KEY);
-    console.log('decoded', decoded);
+    const decoded = jwt.verify(req.cookies['token'], process.env.JWT_SECRET_KEY);
     return res.send(decoded);
   } catch (err) {
     console.log(err);
     res.send(null);
   }
 });
+
+module.exports = app;
 

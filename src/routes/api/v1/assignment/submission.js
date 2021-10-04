@@ -18,7 +18,7 @@ router.put('/evaluate', [
 ], authenticateTAToken, SubmitAssignment.evaluate);
 
 router.post('/comment', [
-  body('assignmentId').not().isEmpty().withMessage('assignment Id is required'),
+  body('submission_id').not().isEmpty().withMessage('assignment Id is required'),
   body('comment').not().isEmpty().withMessage('comment is requied'),
 ], authenticateUserToken, SubmitAssignment.comment);
 
