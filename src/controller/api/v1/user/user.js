@@ -96,7 +96,7 @@ exports.register = async(req, res) => {
       password: hashedPassword,
       name,
       user_type,
-      avatar: 'https://bucket-007.s3.ap-south-1.amazonaws.com/default.png',
+      avatar: 'https://bucket-007.s3.ap-south-1.amazonaws.com/default.jpg',
     });
 
     let user_role;
@@ -131,10 +131,10 @@ exports.updateProfile = async(req, res) => {
 
     // destructure the request body
     const { email, id } = req.user;
-
+    console.log(email);
     const userExists = await User.findOne({ email });
     if (!userExists) {
-      return res.status(404).json({
+      return res.status(400).json({
         type: 'error',
         message: 'User doesn\t exists',
       });

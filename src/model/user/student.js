@@ -6,7 +6,7 @@ const studentSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Assignment',
   }],
-  submittedAssignment: [{
+  submission: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Submission',
   }],

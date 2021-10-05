@@ -33,7 +33,6 @@ const userSchema = new Schema({
     enum: ['Student', 'TA', 'Admin'],
     default: 'Student',
   },
-  // user ref id according to user_type
   user_ref_id: {
     type: Schema.Types.ObjectId,
     refPath: 'user_type',
