@@ -8,10 +8,10 @@ const authenticateUserToken = require('../../../../middleware/user');
 const authenticateTAToken = require('../../../../middleware/TA');
 const upload = multer({ dest: 'uploads/' });
 
-router.post('/', [
+router.post('/', upload.single('file'), [
   body('assignmentId').not().isEmpty().withMessage('Assignment ID is required'),
   body('ta_id').not().isEmpty().withMessage('Teaching Assistant Id is required'),
-], authenticateUserToken, upload.single('file'), SubmitAssignment.submit);
+], authenticateUserToken, SubmitAssignment.submit);
 
 router.put('/evaluate', [
   body('grade, assignmentId, submission_status').not().isEmpty().withMessage('Grade is required'),

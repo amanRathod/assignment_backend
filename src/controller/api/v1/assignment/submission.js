@@ -6,15 +6,13 @@ const TA = require('../../../../model/user/teacher');
 const Comment = require('../../../../model/assignment/comment');
 const Submission = require('../../../../model/assignment/submission');
 const { uploadFile } = require('../../../../../s3');
+const Assignment = require('../../../../model/assignment/assignment');
 
 // const upload = multer({ dest: 'uploads/' });
 
 exports.submit = async(req, res) => {
   try {
     // validate client input data
-    // upload.single('file');
-    console.log(req.body);
-    console.log(req.file);
     const error = validationResult(req);
     if (!error.isEmpty()) {
       return res.status(422).json({
@@ -23,23 +21,31 @@ exports.submit = async(req, res) => {
       });
     }
 
-    // multer to form file location
-    console.log(req.file.path);
+    const { assignmentId } = req.body;
 
-    const filePath = uploadFile(req.file);
-    // const filePath = 'https://bucket-007.s3.ap-south-1.amazonaws.com/CUP-+Batch-1-+2021-Assignment-5.pdf';
+    // s3 to store submitted assignment pdf/doc
+    const filePath = await uploadFile(req.file);
 
     // create Submission collection
     const submission = await Submission.create({
       ...req.body,
-      filePath,
+      filePath: filePath.Location,
       student_id: req.user._id,
     });
 
     // update student collection
     await Student.findByIdAndUpdate({_id: req.user._id}, {
-      $addToSet: {submittedAssignment: submission._id},
+      $addToSet: {submission: submission._id},
     });
+
+    // update assignment collection
+    const assignment = await Assignment.findOneAndUpdate({_id: assignmentId}, { $addToSet: {submission: submission._id} });
+    if (!assignment) {
+      return res.status(404).json({
+        type: 'error',
+        message: 'Assignment not found',
+      });
+    }
 
     return res.status(200).json({
       type: 'success',

@@ -8,11 +8,13 @@ const User = require('../../../../model/user/user');
 const Assignment = require('../../../../model/assignment/assignment');
 const { uploadFile } = require('../../../../../s3');
 
-const multer = require('multer');
-const upload = multer({ dest: 'uploads/' });
+// const multer = require('multer');
+// const upload = multer({ dest: 'uploads/' });
 
 exports.createAssignment = async(req, res) => {
   try {
+    console.log(req.body);
+    console.log(req.file);
     // validate client data
     const error = validationResult(req);
     if (!error.isEmpty()) {
@@ -32,21 +34,22 @@ exports.createAssignment = async(req, res) => {
     }
 
     // multer to get file path
-    upload.single('file');
+    // upload.single('file');
 
     // get url from s3 bucket
     // upload file to s3
     const filePath = await uploadFile(file);
+    console.log(filePath);
     // const filePath = 'https://bucket-007.s3.ap-south-1.amazonaws.com/CUP-+Batch-1-+2021-Assignment-5.pdf';
 
     // create new assignment
     const assignment = new Assignment({
       ...req.body,
-      filePath,
+      filePath: filePath.Location,
     });
     await assignment.save();
 
-    // add assignment id into admin's assignment array with no duplicates assignment id
+    // add assignment id to admin's assignment array without duplicate id
     const admin = await Admin.findOne({admin_id: req.user._id});
     const adminAssignment = admin.assignment.filter(assignment_id => assignment_id !== assignment._id);
     adminAssignment.push(assignment._id);

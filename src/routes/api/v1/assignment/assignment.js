@@ -1,11 +1,13 @@
 /* eslint-disable max-len */
 const express = require('express');
+const multer = require('multer');
 const router = express.Router();
 const { body } = require('express-validator');
 const Assignment = require('../../../../controller/api/v1/assignment/assignment');
 const authenticateAdminToken = require('../../../../middleware/admin');
+const upload = multer({ dest: 'uploads/' });
 
-router.post('/create', [
+router.post('/create', upload.single('file'), [
   body('title').not().isEmpty().withMessage('Title is required'),
   body('description').not().isEmpty().withMessage('Description is required'),
   body('dueDate').not().isEmpty().withMessage('Due date is required'),
