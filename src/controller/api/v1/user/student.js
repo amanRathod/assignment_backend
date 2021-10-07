@@ -16,17 +16,17 @@ exports.getStudentData = async(req, res) => {
     const allTA_Id = studentData.user_ref_id.ta_id;
     const ta = await User.find({_id: {$in: allTA_Id}});
 
-    // get all Assignment submitted by student
+    // get all Assignment assigned to particular student
     const allAssignment = studentData.user_ref_id.assignment;
     const assignments = await Assignment.find({_id: { $in: allAssignment} });
 
-    // get all submitted assigmt
+    // get all submitted assignment by student
     const allSubmission = studentData.user_ref_id.submission;
     const submissions = await Submission.find({_id: { $in: allSubmission}}).populate('comments');
 
     res.status(200).json({
       type: 'success',
-      studentData,
+      data: studentData,
       ta,
       assignments,
       submissions,

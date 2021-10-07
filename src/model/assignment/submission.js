@@ -22,7 +22,6 @@ const SubmissionSchema = new Schema({
   },
   grade: {
     type: Number,
-    required: false,
   },
   comments: [{
     type: Schema.Types.ObjectId,

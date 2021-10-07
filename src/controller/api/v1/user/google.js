@@ -26,7 +26,6 @@ function getGoogleAuthURL() {
 
 // Getting login URL
 app.get('/google/url', (req, res) => {
-  console.log('urll');
   return res.send(getGoogleAuthURL());
 });
 

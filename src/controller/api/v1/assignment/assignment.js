@@ -31,11 +31,12 @@ exports.createAssignment = async(req, res) => {
     }
 
     // multer to get file path
-    // upload.single('image');
+    upload.single('file');
+
     // get url from s3 bucket
     // upload file to s3
-    // const filePath = await uploadFile(file);
-    const filePath = 'https://bucket-007.s3.ap-south-1.amazonaws.com/CUP-+Batch-1-+2021-Assignment-5.pdf';
+    const filePath = await uploadFile(file);
+    // const filePath = 'https://bucket-007.s3.ap-south-1.amazonaws.com/CUP-+Batch-1-+2021-Assignment-5.pdf';
 
     // create new assignment
     const assignment = new Assignment({
@@ -82,7 +83,7 @@ exports.assignedAssignment = async(req, res) => {
     const { ta_id, assignmentId } = req.body;
 
     // verify TA Id
-    const ta = await TA.findOne(ta_id);
+    const ta = await TA.findOne({ta_id});
     if (!ta) {
       return res.status(404).json({
         type: 'warning',

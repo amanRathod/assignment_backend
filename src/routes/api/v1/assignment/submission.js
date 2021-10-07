@@ -6,7 +6,7 @@ const SubmitAssignment = require('../../../../controller/api/v1/assignment/submi
 const authenticateUserToken = require('../../../../middleware/user');
 const authenticateTAToken = require('../../../../middleware/TA');
 
-router.post('/submit-assignment', [
+router.post('/', [
   body('assignmentId').not().isEmpty().withMessage('Assignment ID is required'),
   body('ta_id').not().isEmpty().withMessage('Teaching Assistant Id is required'),
 ], authenticateUserToken, SubmitAssignment.submit);

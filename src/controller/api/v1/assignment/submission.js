@@ -1,17 +1,20 @@
 /* eslint-disable max-len */
 const { validationResult } = require('express-validator');
-// const multer = require('multer');
+const multer = require('multer');
 const Student = require('../../../../model/user/student');
 const TA = require('../../../../model/user/teacher');
 const Comment = require('../../../../model/assignment/comment');
 const Submission = require('../../../../model/assignment/submission');
-// const { uploadFile } = require('../../../../../s3');
+const { uploadFile } = require('../../../../../s3');
 
-// const upload = multer({ dest: 'uploads/' });
+const upload = multer({ dest: 'uploads/' });
 
 exports.submit = async(req, res) => {
   try {
     // validate client input data
+    upload.single('file');
+    console.log(req.body);
+    console.log(req.file);
     const error = validationResult(req);
     if (!error.isEmpty()) {
       return res.status(422).json({
@@ -21,10 +24,10 @@ exports.submit = async(req, res) => {
     }
 
     // multer to form file location
-    // upload.single('file');
+    console.log(req.file.path);
 
-    // const filePath = uploadFile(req.file);
-    const filePath = 'https://bucket-007.s3.ap-south-1.amazonaws.com/CUP-+Batch-1-+2021-Assignment-5.pdf';
+    const filePath = uploadFile(req.file);
+    // const filePath = 'https://bucket-007.s3.ap-south-1.amazonaws.com/CUP-+Batch-1-+2021-Assignment-5.pdf';
 
     // create Submission collection
     const submission = await Submission.create({

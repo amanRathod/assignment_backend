@@ -18,4 +18,6 @@ router.delete('/remove-student', [
 router.get('/TA', authenticateAdminToken, Admin.getAllTA);
 router.get('/student', authenticateAdminToken, Admin.getAllStudents);
 
+router.get('/', authenticateAdminToken, Admin.getTAData);
+
 module.exports = router;

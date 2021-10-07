@@ -131,7 +131,6 @@ exports.updateProfile = async(req, res) => {
 
     // destructure the request body
     const { email, id } = req.user;
-    console.log(email);
     const userExists = await User.findOne({ email });
     if (!userExists) {
       return res.status(400).json({
