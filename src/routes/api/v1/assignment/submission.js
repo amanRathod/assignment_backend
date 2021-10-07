@@ -1,15 +1,17 @@
 /* eslint-disable max-len */
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
 const { body } = require('express-validator');
 const SubmitAssignment = require('../../../../controller/api/v1/assignment/submission');
 const authenticateUserToken = require('../../../../middleware/user');
 const authenticateTAToken = require('../../../../middleware/TA');
+const upload = multer({ dest: 'uploads/' });
 
 router.post('/', [
   body('assignmentId').not().isEmpty().withMessage('Assignment ID is required'),
   body('ta_id').not().isEmpty().withMessage('Teaching Assistant Id is required'),
-], authenticateUserToken, SubmitAssignment.submit);
+], authenticateUserToken, upload.single('file'), SubmitAssignment.submit);
 
 router.put('/evaluate', [
   body('grade, assignmentId, submission_status').not().isEmpty().withMessage('Grade is required'),

@@ -4,6 +4,7 @@ const { validationResult } = require('express-validator');
 const Student = require('../../../../model/user/student');
 const TA = require('../../../../model/user/teacher');
 const Admin = require('../../../../model/user/admin');
+const User = require('../../../../model/user/user');
 const Assignment = require('../../../../model/assignment/assignment');
 const { uploadFile } = require('../../../../../s3');
 

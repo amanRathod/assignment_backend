@@ -4,7 +4,7 @@ const { validationResult } = require('express-validator');
 const User = require('../../../../model/user/user');
 const Student = require('../../../../model/user/student');
 const TA = require('../../../../model/user/teacher');
-const { findByIdAndUpdate } = require('../../../../model/user/user');
+const Assignment = require('../../../../model/assignment/assignment');
 
 exports.assignStudentToTA = async(req, res) => {
   try {
@@ -27,17 +27,11 @@ exports.assignStudentToTA = async(req, res) => {
       });
     }
 
-    // push student_ids into TA assign_student array attribute and avoid duplicates id's
-    ta.assign_student = ta.assign_student.concat(student_ids).filter((id, index) => ta.assign_student.indexOf(id) === index);
-    await ta.save();
+    // push student_ids into TA assign_student array with no duplicate id's
+    await TA.findOneAndUpdate({ta_id}, {$addToSet: {assign_student: {$each: student_ids}}}, {new: true});
 
-    // add TA id into student's ta_id array attribute and avoid duplicates id's
-    const students = await Student.find({student_id: {$in: student_ids}});
-    students.forEach((student) => {
-      student.ta_id = student.ta_id.concat(ta_id).filter((id, index) => ta_id.indexOf(id) === index);
-      student.assigned = true;
-      student.save();
-    });
+    // add TA id into student's ta_id array with no duplicate id's
+    await Student.updateMany({student_id: {$in: student_ids}}, {$addToSet: {ta_id: ta_id}}, {new: true});
 
     res.status(200).json({
       type: 'success',
@@ -59,13 +53,14 @@ exports.removeStudent = async(req, res) => {
       });
     }
     // destructure the request body
-    const { student_id, ta_id } = req.body;
+    const { student_ids, ta_id } = req.body;
 
-    // remove TA Id from student_id of Student Model
-    const student = await Student.findOneAndUpdate({student_id}, {$pull: {ta_id: ta_id}});
+    // remove TA Id according to student_id from student's ta_id array
+    const student = await Student.updateMany({student_id: {$in: student_ids}}, {$pull: {ta_id: ta_id}}, {new: true});
 
-    // remove student_id from assign_student of TA Model
-    const ta = await TA.findOneAndUpdate({ta_id}, {$pull: {assign_student: student_id}});
+    // remove student_id from TA assign_student array
+    const ta = await TA.findOneAndUpdate({ta_id}, {$pull: {assign_student: {$in: student_ids}}}, {new: true});
+
 
     // veify TA Id and Student Id
     if (!student || !ta) {
@@ -78,6 +73,7 @@ exports.removeStudent = async(req, res) => {
     return res.status(200).json({
       type: 'success',
       message: 'Student removed from assigned TA',
+      assign_student: ta.assign_student,
     });
 
   } catch (err) {
@@ -127,3 +123,38 @@ exports.getAllStudents = async(req, res) => {
     });
   }
 };
+
+exports.getTAData = async(req, res) => {
+  try {
+    const { email } = req.user;
+
+    // get TA data
+    const adminData = await User.findOne({email}).populate('user_ref_id').exec();
+
+    // get all assignment created by admin
+    const allAssignment = adminData.user_ref_id.assignment;
+    const assignments = await Assignment.find({_id: { $in: allAssignment} });
+
+    // get all student
+    const students = await User.find({user_type: 'Student'}).populate('user_ref_id');
+
+    // get all teaching Assistant
+    const ta = await User.find({ user_type: 'TA' })
+      .populate('user_ref_id').exec();
+
+    res.status(200).json({
+      type: 'success',
+      data: adminData,
+      ta,
+      students,
+      assignments,
+    });
+
+  } catch (err) {
+    return res.status(500).json({
+      status: 'error',
+      message: err.message,
+    });
+  }
+};
+

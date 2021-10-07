@@ -1,18 +1,18 @@
 /* eslint-disable max-len */
 const { validationResult } = require('express-validator');
-const multer = require('multer');
+// const multer = require('multer');
 const Student = require('../../../../model/user/student');
 const TA = require('../../../../model/user/teacher');
 const Comment = require('../../../../model/assignment/comment');
 const Submission = require('../../../../model/assignment/submission');
 const { uploadFile } = require('../../../../../s3');
 
-const upload = multer({ dest: 'uploads/' });
+// const upload = multer({ dest: 'uploads/' });
 
 exports.submit = async(req, res) => {
   try {
     // validate client input data
-    upload.single('file');
+    // upload.single('file');
     console.log(req.body);
     console.log(req.file);
     const error = validationResult(req);

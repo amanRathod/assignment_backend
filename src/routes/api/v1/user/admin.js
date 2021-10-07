@@ -6,12 +6,12 @@ const Admin = require('../../../../controller/api/v1/user/admin');
 const authenticateAdminToken = require('../../../../middleware/admin');
 
 router.post('/student_to_TA', [
-  body('student_ids').isArray().isEmpty(),
+  body('student_ids').not().isEmpty().withMessage('students id is required'),
   body('ta_id').not().isEmpty().withMessage('TA id is required'),
 ], authenticateAdminToken, Admin.assignStudentToTA);
 
-router.delete('/remove-student', [
-  body('student_id').not().isEmpty().withMessage('Student id is required'),
+router.post('/remove-student', [
+  body('student_ids').not().isEmpty().withMessage('Student id is required'),
   body('ta_id').not().isEmpty().withMessage('TA id is required'),
 ], authenticateAdminToken, Admin.removeStudent);
 
