@@ -1,14 +1,12 @@
 /* eslint-disable max-len */
 const { validationResult } = require('express-validator');
-// const multer = require('multer');
 const Student = require('../../../../model/user/student');
-const TA = require('../../../../model/user/teacher');
+// const TA = require('../../../../model/user/teacher');
 const Comment = require('../../../../model/assignment/comment');
 const Submission = require('../../../../model/assignment/submission');
 const { uploadFile } = require('../../../../../s3');
 const Assignment = require('../../../../model/assignment/assignment');
 
-// const upload = multer({ dest: 'uploads/' });
 
 exports.submit = async(req, res) => {
   try {
@@ -75,28 +73,17 @@ exports.evaluate = async(req, res) => {
 
     const { grade, assignmentId, submission_status } = req.body;
 
-    const assignmentExists = await Submission.findById({_id: assignmentId});
-    if (!assignmentExists) {
-      return res.status(404).json({
+    //  evalute assingment by grading
+    const submit = await Submission.findByIdAndUpdate({_id: assignmentId}, {
+      grade,
+      submission_status,
+    });
+    if (!submit) {
+      res.status(404).json({
         type: 'error',
         message: 'Assignment not found',
       });
     }
-
-    // check if TA has right to evalute the assignment of particular student
-    const ta = await TA.findOne({_id: req.user._id});
-    if (!ta.assignment.includes(assignmentId)) {
-      return res.status(403).json({
-        type: 'error',
-        message: 'You are not authorized to evaluate this assignment',
-      });
-    }
-
-    //  evalute assingment by grading
-    await Submission.findByIdAndUpdate({_id: assignmentId}, {
-      grade,
-      submission_status,
-    });
 
     return res.status(200).json({
       type: 'success',

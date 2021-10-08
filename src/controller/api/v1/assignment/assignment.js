@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable max-len */
 const { validationResult } = require('express-validator');
+const mongoose = require('mongoose');
 const Student = require('../../../../model/user/student');
 const TA = require('../../../../model/user/teacher');
 const Admin = require('../../../../model/user/admin');
@@ -87,7 +88,7 @@ exports.assignedAssignment = async(req, res) => {
     const { ta_id, assignmentId } = req.body;
 
     // verify TA Id
-    const ta = await TA.findOne({ta_id});
+    const ta = await TA.find({ta_id: {$in: ta_id}});
     if (!ta) {
       return res.status(404).json({
         type: 'warning',
@@ -95,7 +96,8 @@ exports.assignedAssignment = async(req, res) => {
       });
     }
 
-    const assignment = await Assignment.findById({_id: assignmentId});
+    // add selected TA Id's into assignment's assigned_TA array
+    const assignment = await Assignment.findByIdAndUpdate({_id: assignmentId}, {$addToSet: {assigned_TA: ta_id}});
 
     if (!assignment) {
       return res.status(404).json({
@@ -104,22 +106,20 @@ exports.assignedAssignment = async(req, res) => {
       });
     }
 
-    // update TA assignment with no duplicates assignment id
-    const taAssignment = ta.assignment.filter(assignment_id => assignment_id !== assignmentId);
-    taAssignment.push(assignmentId);
-    ta.assignment = taAssignment;
-    await ta.save();
+    // update TA's assignment array with no duplicates assignment id
+    const Ta = await TA.updateMany({ta_id: {$in: ta_id}}, {$addToSet: {assignment: assignmentId}});
+    console.log('Ta', Ta);
 
-
-    // update student assignment with no duplicates assignment id
-    const assignStudents = ta.assign_student;
-    for (let i = 0; i < assignStudents.length; i++) {
-      const student = await Student.findOne({student_id: assignStudents[i]});
-      const studentAssignment = student.assignment.filter(assignment_id => assignment_id !== assignmentId);
-      studentAssignment.push(assignmentId);
-      student.assignment = studentAssignment;
-      await student.save();
+    // store the assign_students of selected TA
+    let students = [];
+    for (let i = 0; i < ta.length; i++) {
+      for (let j = 0; j < ta[i].assign_student.length; j++) {
+        students.push(ta[i].assign_student[j]);
+      }
     }
+
+    // add assignmentId into student's assignment array attribute
+    await Student.updateMany({student_id: {$in: students}}, {$addToSet: {assignment: assignmentId}});
 
     return res.status(200).json({
       type: 'success',
@@ -127,6 +127,7 @@ exports.assignedAssignment = async(req, res) => {
     });
 
   } catch (err) {
+    console.log(err);
     return res.status(500).json({
       status: 'error',
       message: err.message,

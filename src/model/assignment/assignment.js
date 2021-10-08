@@ -39,10 +39,10 @@ const AssignmentSchema = new Schema({
     required: true,
     default: 100,
   },
-  assigned_TA: {
+  assigned_TA: [{
     type: Schema.Types.ObjectId,
     ref: 'User',
-  },
+  }],
   submission: [{
     type: Schema.Types.ObjectId,
     ref: 'Submission',

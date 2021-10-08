@@ -14,7 +14,7 @@ router.post('/', upload.single('file'), [
 ], authenticateUserToken, SubmitAssignment.submit);
 
 router.put('/evaluate', [
-  body('grade, assignmentId, submission_status').not().isEmpty().withMessage('Grade is required'),
+  body('grade').not().isEmpty().withMessage('Grade is required'),
   body('assignmentId').not().isEmpty().withMessage('assignment Id is required'),
   body('submission_status').not().isEmpty().withMessage('submission_status is required'),
 ], authenticateTAToken, SubmitAssignment.evaluate);
