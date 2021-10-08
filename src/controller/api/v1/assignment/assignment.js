@@ -9,13 +9,8 @@ const User = require('../../../../model/user/user');
 const Assignment = require('../../../../model/assignment/assignment');
 const { uploadFile } = require('../../../../../s3');
 
-// const multer = require('multer');
-// const upload = multer({ dest: 'uploads/' });
-
 exports.createAssignment = async(req, res) => {
   try {
-    console.log(req.body);
-    console.log(req.file);
     // validate client data
     const error = validationResult(req);
     if (!error.isEmpty()) {
@@ -34,14 +29,10 @@ exports.createAssignment = async(req, res) => {
       });
     }
 
-    // multer to get file path
-    // upload.single('file');
-
     // get url from s3 bucket
     // upload file to s3
     const filePath = await uploadFile(file);
     console.log(filePath);
-    // const filePath = 'https://bucket-007.s3.ap-south-1.amazonaws.com/CUP-+Batch-1-+2021-Assignment-5.pdf';
 
     // create new assignment
     const assignment = new Assignment({
@@ -148,9 +139,17 @@ exports.updateAssignment = async(req, res) => {
 
     const { assignmentId } = req.body;
 
-    // update assignment in Assignment collection
-    const assignment = await Assignment.findByIdAndUpdate({_id: assignmentId}, req.body);
+    let filePath;
+    if (req.file) {
+      const file = await uploadFile(req.file);
+      filePath = file.Location;
+    }
 
+    // update assignment in Assignment collection
+    const assignment = await Assignment.findByIdAndUpdate({_id: assignmentId}, {
+      ...req.body,
+      filePath: req.file ? filePath : req.body.filepath,
+    });
     if (!assignment) {
       return res.status(404).json({
         type: 'error',
@@ -184,8 +183,8 @@ exports.deleteAssignment = async(req, res) => {
 
     const { assignmentId } = req.body;
 
-    // delete assignment from Assignment collection
-    const assignment = await Assignment.findByIdAndDelete({_id: assignmentId});
+    // delete assigment Id from TA and Student's assignment array attribute and delete assignment from Assignment collection and delete file from s3 bucket
+    const assignment = await Assignment.findOne({_id: assignmentId});
     if (!assignment) {
       return res.status(404).json({
         type: 'error',
@@ -193,12 +192,25 @@ exports.deleteAssignment = async(req, res) => {
       });
     }
 
-    // delete assignment Id from admin's assignment array
-    const admin = await Admin.findOne({admin_id: req.user._id});
-    const adminAssignment = admin.assignment.filter(assignment_id => assignment_id !== assignmentId);
-    admin.assignment = adminAssignment;
-    await admin.save();
+    // delete assignment from TA's assignment array
+    const ta = await TA.updateMany({ta_id: {$in: assignment.assigned_TA}}, {$pull: {assignment: assignmentId}});
 
+    // delete assignment from Admin assignment array
+    await Admin.findOneAndUpdate({admin_id: req.user._id}, {$pull: {assignment: assignmentId}});
+
+    // store the assign_students of selected TA
+    let students = [];
+    for (let i = 0; i < ta.length; i++) {
+      for (let j = 0; j < ta[i].assign_student.length; j++) {
+        students.push(ta[i].assign_student[j]);
+      }
+    }
+
+    // delete assignment from student's assignment array attribute
+    await Student.updateMany({student_id: {$in: students}}, {$pull: {assignment: assignmentId}});
+
+    // finally delete assignment
+    await Assignment.findByIdAndDelete({_id: assignmentId});
 
     return res.status(200).json({
       type: 'success',
@@ -206,6 +218,7 @@ exports.deleteAssignment = async(req, res) => {
     });
 
   } catch (err) {
+    console.log(err);
     return res.status(500).json({
       status: 'error',
       message: err.message,

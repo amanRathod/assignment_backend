@@ -20,11 +20,11 @@ router.post('/assign-to-TA', [
   body('assignmentId').not().isEmpty().withMessage('assignment id is required'),
 ], authenticateAdminToken, Assignment.assignedAssignment);
 
-router.put('/', [
+router.put('/update', upload.single('file'), [
   body('assignmentId').not().isEmpty().withMessage('assignment Id is required'),
 ], authenticateAdminToken, Assignment.updateAssignment);
 
-router.delete('/', [
+router.put('/delete', [
   body('assignmentId').not().isEmpty().withMessage('assignment Id is required'),
 ], authenticateAdminToken, Assignment.deleteAssignment);
 
