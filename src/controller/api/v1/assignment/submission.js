@@ -7,7 +7,6 @@ const Submission = require('../../../../model/assignment/submission');
 const { uploadFile } = require('../../../../../s3');
 const Assignment = require('../../../../model/assignment/assignment');
 
-
 exports.submit = async(req, res) => {
   try {
     // validate client input data
@@ -23,6 +22,10 @@ exports.submit = async(req, res) => {
 
     // s3 to store submitted assignment pdf/doc
     const filePath = await uploadFile(req.file);
+
+    // get ta_id array from student model
+    // const student = await Student.findById({student_id: req.user.id});
+    // const taId = student.ta_id;
 
     // create Submission collection
     const submission = await Submission.create({
@@ -71,12 +74,12 @@ exports.evaluate = async(req, res) => {
       });
     }
 
-    const { grade, assignmentId, submission_status } = req.body;
+    const { grade, assignmentId } = req.body;
 
     //  evalute assingment by grading
     const submit = await Submission.findByIdAndUpdate({_id: assignmentId}, {
       grade,
-      submission_status,
+      submission_status: 'accepted',
     });
     if (!submit) {
       res.status(404).json({
@@ -90,6 +93,67 @@ exports.evaluate = async(req, res) => {
       message: 'Assignment evaluated',
     });
 
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      success: false,
+      message: 'Server Error',
+    });
+  }
+};
+
+exports.update = async(req, res) => {
+  try {
+    const { submission_id } = req.body;
+
+    // s3 to store submitted assignment pdf/doc
+    const filePath = await uploadFile(req.file);
+
+    // updated ubmitted assignment
+    const submission = await Submission.findByIdAndUpdate({_id: submission_id}, {
+      filePath: filePath.Location,
+    });
+    if (!submission) {
+      return res.status(422).json({
+        type: 'success',
+        message: 'Submitted assignment not found',
+      });
+    }
+
+    return res.status(200).json({
+      type: 'success',
+      message: 'Submitted assignment Updated',
+    });
+
+
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      success: false,
+      message: 'Server Error',
+    });
+  }
+};
+
+exports.getSubmission = async(req, res) => {
+  try {
+    const { assignmentId } = req.body;
+
+    // get submission from assignment collection by assignmentId
+    const assignment = await (await Assignment.findOne({_id: assignmentId})).populate('submission');
+    if (!assignment) {
+      return res.status(404).json({
+        type: 'error',
+        message: 'Assignment not found',
+      });
+    }
+    console.log(assignment);
+
+    return res.status(200).json({
+      type: 'success',
+      message: 'Assignment found',
+      data: assignment,
+    });
   } catch (err) {
     console.log(err);
     return res.status(500).json({

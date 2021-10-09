@@ -32,7 +32,6 @@ exports.createAssignment = async(req, res) => {
     // get url from s3 bucket
     // upload file to s3
     const filePath = await uploadFile(file);
-    console.log(filePath);
 
     // create new assignment
     const assignment = new Assignment({
@@ -99,7 +98,6 @@ exports.assignedAssignment = async(req, res) => {
 
     // update TA's assignment array with no duplicates assignment id
     const Ta = await TA.updateMany({ta_id: {$in: ta_id}}, {$addToSet: {assignment: assignmentId}});
-    console.log('Ta', Ta);
 
     // store the assign_students of selected TA
     let students = [];

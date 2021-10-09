@@ -83,12 +83,12 @@ app.get('/google', async(req, res) => {
     const jwt_token = jwt.sign({id: user._id, email: user.email}, process.env.JWT_SECRET_KEY);
 
     // send the token to the client side as cookie
-    res.cookie('token', jwt_token, { httpOnly: true });
+    res.cookie('token', jwt_token, { httpOnly: false });
     res.cookie('user', email, { httpOnly: false });
 
     // redirect to dashboard if user have already filled the personal details
     if (user.registration_no) {
-      res.redirect(`http://localhost:3000/${user.user_type}/dashboard`);
+      res.redirect('http://localhost:3000/dashboard');
     } else {
       res.redirect('http://localhost:3000/personal-details');
     }

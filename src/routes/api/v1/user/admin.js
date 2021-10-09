@@ -18,6 +18,6 @@ router.post('/remove-student', [
 router.get('/TA', authenticateAdminToken, Admin.getAllTA);
 router.get('/student', authenticateAdminToken, Admin.getAllStudents);
 
-router.get('/', authenticateAdminToken, Admin.getTAData);
+router.get('/', authenticateAdminToken, Admin.getAdminData);
 
 module.exports = router;

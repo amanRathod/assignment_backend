@@ -124,7 +124,7 @@ exports.getAllStudents = async(req, res) => {
   }
 };
 
-exports.getTAData = async(req, res) => {
+exports.getAdminData = async(req, res) => {
   try {
     const { email } = req.user;
 
@@ -133,7 +133,17 @@ exports.getTAData = async(req, res) => {
 
     // get all assignment created by admin
     const allAssignment = adminData.user_ref_id.assignment;
-    const assignments = await Assignment.find({_id: { $in: allAssignment} });
+    // get assignment data according to assignment id in allAssignment array and populate submission data and student data
+    const assignments = await Assignment.find({assignment_id: {$in: allAssignment}})
+      .populate({
+        path: 'submission',
+        populate: {
+          path: 'student_id',
+          populate: {
+            path: 'user_ref_id',
+          },
+        },
+      }).exec();
 
     // get all student
     const students = await User.find({user_type: 'Student'}).populate('user_ref_id');
@@ -151,6 +161,7 @@ exports.getTAData = async(req, res) => {
     });
 
   } catch (err) {
+    console.log(err);
     return res.status(500).json({
       status: 'error',
       message: err.message,

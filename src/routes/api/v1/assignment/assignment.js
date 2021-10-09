@@ -1,11 +1,18 @@
 /* eslint-disable max-len */
 const express = require('express');
 const multer = require('multer');
+const path = require('path');
 const router = express.Router();
 const { body } = require('express-validator');
 const Assignment = require('../../../../controller/api/v1/assignment/assignment');
 const authenticateAdminToken = require('../../../../middleware/admin');
-const upload = multer({ dest: 'uploads/' });
+
+const storage = multer.diskStorage({
+  filename: (req, file, cb) => {
+    cb(null, 'IMAGE-' + Date.now() + path.extname(file.originalname));
+  },
+});
+const upload = multer({storage: storage});
 
 router.post('/create', upload.single('file'), [
   body('title').not().isEmpty().withMessage('Title is required'),

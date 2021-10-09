@@ -22,7 +22,7 @@ exports.getStudentData = async(req, res) => {
 
     // get all submitted assignment by student
     const allSubmission = studentData.user_ref_id.submission;
-    const submissions = await Submission.find({_id: { $in: allSubmission}}).populate('comments');
+    const submissions = await Submission.find({_id: { $in: allSubmission}});
 
     res.status(200).json({
       type: 'success',

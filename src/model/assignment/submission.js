@@ -15,11 +15,11 @@ const SubmissionSchema = new Schema({
     ref: 'User',
     required: true,
   },
-  ta_id: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-  },
+  // ta_id: {
+  //   type: Schema.Types.ObjectId,
+  //   ref: 'User',
+  //   required: true,
+  // },
   grade: {
     type: Number,
   },
