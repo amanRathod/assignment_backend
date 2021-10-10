@@ -23,10 +23,6 @@ exports.submit = async(req, res) => {
     // s3 to store submitted assignment pdf/doc
     const filePath = await uploadFile(req.file);
 
-    // get ta_id array from student model
-    // const student = await Student.findById({student_id: req.user.id});
-    // const taId = student.ta_id;
-
     // create Submission collection
     const submission = await Submission.create({
       ...req.body,
@@ -34,10 +30,11 @@ exports.submit = async(req, res) => {
       student_id: req.user._id,
     });
 
-    // update student collection
-    await Student.findByIdAndUpdate({_id: req.user._id}, {
+    // update student collection with submission_id array
+    await Student.findOneAndUpdate({student_id: req.user.id}, {
       $addToSet: {submission: submission._id},
     });
+
 
     // update assignment collection
     const assignment = await Assignment.findOneAndUpdate({_id: assignmentId}, { $addToSet: {submission: submission._id} });
@@ -55,7 +52,6 @@ exports.submit = async(req, res) => {
     });
 
   } catch (err) {
-    console.log(err);
     return res.status(500).json({
       success: false,
       message: 'Server Error',
@@ -68,34 +64,38 @@ exports.evaluate = async(req, res) => {
     // validate client input data
     const error = validationResult(req);
     if (!error.isEmpty()) {
-      return res.status(422).json({
-        type: 'warining',
+      return res.status(201).json({
+        type: 'warning',
         message: error.array()[0].msg,
       });
     }
 
-    const { grade, assignmentId } = req.body;
+    const { grade, assignmentId, submittedAssignmentId } = req.body;
 
-    //  evalute assingment by grading
-    const submit = await Submission.findByIdAndUpdate({_id: assignmentId}, {
-      grade,
-      submission_status: 'accepted',
-    });
-    if (!submit) {
-      res.status(404).json({
-        type: 'error',
-        message: 'Assignment not found',
+    // find asssignment collection by assignmentId and get totalMarks attrubute from it
+    const assignment = await Assignment.findOne({_id: assignmentId});
+    console.log(assignment);
+    if (grade > assignment.totalMarks) {
+      return res.status(200).json({
+        type: 'warning',
+        message: 'Grade cannot be greater than total marks',
       });
     }
 
-    return res.status(200).json({
+
+    //  evalute assingment by grading
+    await Submission.findByIdAndUpdate({_id: submittedAssignmentId}, {
+      grade,
+      submission_status: 'accepted',
+    });
+
+    res.status(200).json({
       type: 'success',
       message: 'Assignment evaluated',
     });
 
   } catch (err) {
-    console.log(err);
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: 'Server Error',
     });
@@ -127,7 +127,6 @@ exports.update = async(req, res) => {
 
 
   } catch (err) {
-    console.log(err);
     return res.status(500).json({
       success: false,
       message: 'Server Error',
@@ -147,7 +146,6 @@ exports.getSubmission = async(req, res) => {
         message: 'Assignment not found',
       });
     }
-    console.log(assignment);
 
     return res.status(200).json({
       type: 'success',
@@ -155,7 +153,6 @@ exports.getSubmission = async(req, res) => {
       data: assignment,
     });
   } catch (err) {
-    console.log(err);
     return res.status(500).json({
       success: false,
       message: 'Server Error',
@@ -199,7 +196,6 @@ exports.comment = async(req, res) => {
     });
 
   } catch (err) {
-    console.log(err);
     return res.status(500).json({
       success: false,
       message: 'Server Error',

@@ -15,9 +15,9 @@ router.post('/remove-student', [
   body('ta_id').not().isEmpty().withMessage('TA id is required'),
 ], authenticateAdminToken, Admin.removeStudent);
 
+router.get('/', authenticateAdminToken, Admin.getAdminData);
 router.get('/TA', authenticateAdminToken, Admin.getAllTA);
 router.get('/student', authenticateAdminToken, Admin.getAllStudents);
 
-router.get('/', authenticateAdminToken, Admin.getAdminData);
 
 module.exports = router;

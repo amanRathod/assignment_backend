@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 /* eslint-disable max-len */
 const { validationResult } = require('express-validator');
 const User = require('../../../../model/user/user');
@@ -77,7 +76,6 @@ exports.removeStudent = async(req, res) => {
     });
 
   } catch (err) {
-    console.log(err);
     res.status(500).json({
       type: 'error',
       message: 'Invalid Server',
@@ -91,7 +89,7 @@ exports.getAllTA = async(req, res) => {
     const teachingAssistant = await User.find({ user_type: 'TA' })
       .populate('user_ref_id').exec();
 
-    res.status(200).json({
+    return res.status(200).json({
       status: 'success',
       data: {
         teachingAssistant,
@@ -133,7 +131,6 @@ exports.getAdminData = async(req, res) => {
 
     // get all assignment created by admin
     const allAssignment = adminData.user_ref_id.assignment;
-    // get assignment data according to assignment id in allAssignment array and populate submission data and student data
     const assignments = await Assignment.find({assignment_id: {$in: allAssignment}})
       .populate({
         path: 'submission',
@@ -152,6 +149,24 @@ exports.getAdminData = async(req, res) => {
     const ta = await User.find({ user_type: 'TA' })
       .populate('user_ref_id').exec();
 
+
+    // get today's date
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    // update status of assignments according to today date and deadline
+    assignments.forEach((assignment) => {
+      const deadline = new Date(assignment.dueDate);
+      const startDate = new Date(assignment.startDate);
+      if (deadline < today) {
+        assignment.status = 'completed';
+      } else if (startDate > today) {
+        assignment.status = 'inactive';
+      } else {
+        assignment.status = 'active';
+      }
+    });
+
     res.status(200).json({
       type: 'success',
       data: adminData,
@@ -161,7 +176,6 @@ exports.getAdminData = async(req, res) => {
     });
 
   } catch (err) {
-    console.log(err);
     return res.status(500).json({
       status: 'error',
       message: err.message,

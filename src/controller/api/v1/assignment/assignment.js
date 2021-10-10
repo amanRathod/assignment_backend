@@ -1,37 +1,17 @@
-/* eslint-disable no-unused-vars */
 /* eslint-disable max-len */
 const { validationResult } = require('express-validator');
-const mongoose = require('mongoose');
 const Student = require('../../../../model/user/student');
 const TA = require('../../../../model/user/teacher');
 const Admin = require('../../../../model/user/admin');
-const User = require('../../../../model/user/user');
 const Assignment = require('../../../../model/assignment/assignment');
 const { uploadFile } = require('../../../../../s3');
 
 exports.createAssignment = async(req, res) => {
   try {
-    // validate client data
-    const error = validationResult(req);
-    if (!error.isEmpty()) {
-      return res.status(422).json({
-        type: 'warning',
-        message: error.array()[0].msg,
-      });
-    }
-
-    //  multer to upload file
-    const file = req.file;
-    if (!file) {
-      return res.status(422).json({
-        type: 'warning',
-        message: 'Please upload a file',
-      });
-    }
 
     // get url from s3 bucket
     // upload file to s3
-    const filePath = await uploadFile(file);
+    const filePath = await uploadFile(req.file);
 
     // create new assignment
     const assignment = new Assignment({
@@ -40,20 +20,12 @@ exports.createAssignment = async(req, res) => {
     });
     await assignment.save();
 
-    // add assignment id to admin's assignment array without duplicate id
-    const admin = await Admin.findOne({admin_id: req.user._id});
-    const adminAssignment = admin.assignment.filter(assignment_id => assignment_id !== assignment._id);
-    adminAssignment.push(assignment._id);
-    admin.assignment = adminAssignment;
-    await admin.save();
+    // add assignment id to admin's assignment array without duplicate id in assignment array
+    await Admin.findOneAndUpdate({admin_id: req.user.id}, {$addToSet: {assignment: assignment._id}});
 
-    return res.status(201).json({
+    res.status(200).json({
       type: 'success',
       message: 'Assignment created',
-      data: {
-        assignmentId: assignment._id,
-        filePath,
-      },
     });
 
   } catch (err) {
@@ -66,25 +38,11 @@ exports.createAssignment = async(req, res) => {
 
 exports.assignedAssignment = async(req, res) => {
   try {
-    // validate client data
-    const error = validationResult(req);
-    if (!error.isEmpty()) {
-      return res.status(422).json({
-        type: 'warning',
-        message: error.array()[0].msg,
-      });
-    }
 
     const { ta_id, assignmentId } = req.body;
 
     // verify TA Id
     const ta = await TA.find({ta_id: {$in: ta_id}});
-    if (!ta) {
-      return res.status(404).json({
-        type: 'warning',
-        message: 'TA not found',
-      });
-    }
 
     // add selected TA Id's into assignment's assigned_TA array
     const assignment = await Assignment.findByIdAndUpdate({_id: assignmentId}, {$addToSet: {assigned_TA: ta_id}});
@@ -97,7 +55,7 @@ exports.assignedAssignment = async(req, res) => {
     }
 
     // update TA's assignment array with no duplicates assignment id
-    const Ta = await TA.updateMany({ta_id: {$in: ta_id}}, {$addToSet: {assignment: assignmentId}});
+    await TA.updateMany({ta_id: {$in: ta_id}}, {$addToSet: {assignment: assignmentId}});
 
     // store the assign_students of selected TA
     let students = [];
@@ -116,7 +74,6 @@ exports.assignedAssignment = async(req, res) => {
     });
 
   } catch (err) {
-    console.log(err);
     return res.status(500).json({
       status: 'error',
       message: err.message,
@@ -216,7 +173,6 @@ exports.deleteAssignment = async(req, res) => {
     });
 
   } catch (err) {
-    console.log(err);
     return res.status(500).json({
       status: 'error',
       message: err.message,
