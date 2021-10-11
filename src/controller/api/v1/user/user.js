@@ -41,8 +41,10 @@ exports.login = async(req, res, next) => {
     }
 
     // create jwt token
-    const token = jwt.sign({id: user._id, email: user.email}, process.env.JWT_SECRET_KEY);
-    console.log(user);
+    const token = jwt.sign({id: user._id, email: user.email}, process.env.JWT_SECRET_KEY, {
+      expiresIn: '2h',
+    });
+
     return res.status(200).json({
       type: 'success',
       token,
@@ -64,7 +66,7 @@ exports.register = async(req, res) => {
     // validate user input data
     const error = validationResult(req);
     if (!error) {
-      return res.send(200).json({
+      return res.send(201).json({
         type: 'warning',
         message: error.array()[0].msg,
       });
@@ -76,7 +78,7 @@ exports.register = async(req, res) => {
     // email must be unique
     const userExists = await User.findOne({ email });
     if (userExists) {
-      return res.status(200).json({
+      return res.status(201).json({
         type: 'warning',
         message: 'User already exists',
       });
@@ -209,7 +211,7 @@ exports.updateGoogleProfile = async(req, res) => {
     }
 
     // update User profile
-    const user = await User.findOneAndUpdate({ email }, { $set: req.body }, { new: true });
+    const user = await User.findOneAndUpdate({ email }, { ...req.body, user_type }, { new: true });
 
     let user_role;
     // create user according to user_type for specific user_type model
@@ -220,8 +222,6 @@ exports.updateGoogleProfile = async(req, res) => {
     } else if (user_type === 'Admin') {
       user_role = await Admin.create({admin_id: user._id});
     }
-    console.log(req.body);
-    console.log(user_role);
     // save userData in user_ref_id
     user.user_ref_id = user_role._id;
     user.save();
@@ -234,7 +234,6 @@ exports.updateGoogleProfile = async(req, res) => {
     });
 
   } catch (err) {
-    console.log(err);
     return res.status(500).json({
       type: 'error',
       message: 'Server is Invalid',

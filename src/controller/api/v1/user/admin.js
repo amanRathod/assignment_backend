@@ -125,13 +125,12 @@ exports.getAllStudents = async(req, res) => {
 exports.getAdminData = async(req, res) => {
   try {
     const { email } = req.user;
-
     // get TA data
     const adminData = await User.findOne({email}).populate('user_ref_id').exec();
 
     // get all assignment created by admin
     const allAssignment = adminData.user_ref_id.assignment;
-    const assignments = await Assignment.find({assignment_id: {$in: allAssignment}})
+    const assignments = await Assignment.find({_id: {$in: allAssignment}})
       .populate({
         path: 'submission',
         populate: {
@@ -165,6 +164,7 @@ exports.getAdminData = async(req, res) => {
       } else {
         assignment.status = 'active';
       }
+      assignment.save();
     });
 
     res.status(200).json({

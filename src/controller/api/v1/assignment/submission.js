@@ -35,7 +35,6 @@ exports.submit = async(req, res) => {
       $addToSet: {submission: submission._id},
     });
 
-
     // update assignment collection
     const assignment = await Assignment.findOneAndUpdate({_id: assignmentId}, { $addToSet: {submission: submission._id} });
     if (!assignment) {
@@ -74,9 +73,8 @@ exports.evaluate = async(req, res) => {
 
     // find asssignment collection by assignmentId and get totalMarks attrubute from it
     const assignment = await Assignment.findOne({_id: assignmentId});
-    console.log(assignment);
     if (grade > assignment.totalMarks) {
-      return res.status(200).json({
+      return res.status(201).json({
         type: 'warning',
         message: 'Grade cannot be greater than total marks',
       });
@@ -89,7 +87,7 @@ exports.evaluate = async(req, res) => {
       submission_status: 'accepted',
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       type: 'success',
       message: 'Assignment evaluated',
     });

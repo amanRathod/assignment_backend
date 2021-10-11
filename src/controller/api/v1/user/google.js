@@ -80,7 +80,9 @@ app.get('/google', async(req, res) => {
     }
 
     // create jwt token
-    const jwt_token = jwt.sign({id: user._id, email: user.email}, process.env.JWT_SECRET_KEY);
+    const jwt_token = jwt.sign({id: user._id, email: user.email}, process.env.JWT_SECRET_KEY, {
+      expiresIn: '2h',
+    });
 
     // send the token to the client side as cookie
     res.cookie('token', jwt_token, { httpOnly: false });

@@ -1,13 +1,10 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable max-len */
+
 const cors = require('cors');
 const dotenv = require('dotenv');
 const morgan = require('morgan');
 const express = require('express');
 const ConnectDB = require('./config/db');
 const cookieParser = require('cookie-parser');
-const jwt = require('jsonwebtoken');
-const axios = require('axios');
 
 async function startServer() {
   const app = express();
@@ -23,6 +20,11 @@ async function startServer() {
   app.use(morgan('dev'));
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+
+  // disable console log for production mode
+  if (process.env.NODE_ENV === 'production') {
+    console.log = () => {};
+  }
 
   app.use('/auth', require('./controller/api/v1/user/google'));
   app.use('/', require('./routes'));

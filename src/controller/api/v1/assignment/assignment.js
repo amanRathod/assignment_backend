@@ -23,7 +23,7 @@ exports.createAssignment = async(req, res) => {
     // add assignment id to admin's assignment array without duplicate id in assignment array
     await Admin.findOneAndUpdate({admin_id: req.user.id}, {$addToSet: {assignment: assignment._id}});
 
-    res.status(200).json({
+    return res.status(200).json({
       type: 'success',
       message: 'Assignment created',
     });
@@ -91,7 +91,6 @@ exports.updateAssignment = async(req, res) => {
         message: error.array()[0].msg,
       });
     }
-
     const { assignmentId } = req.body;
 
     let filePath;
@@ -106,7 +105,7 @@ exports.updateAssignment = async(req, res) => {
       filePath: req.file ? filePath : req.body.filepath,
     });
     if (!assignment) {
-      return res.status(404).json({
+      return res.status(201).json({
         type: 'error',
         message: 'assignment not found',
       });

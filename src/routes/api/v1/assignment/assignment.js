@@ -27,7 +27,7 @@ router.post('/assign-to-TA', [
   body('assignmentId').not().isEmpty().withMessage('assignment id is required'),
 ], authenticateAdminToken, Assignment.assignedAssignment);
 
-router.put('/update', upload.single('file'), [
+router.post('/update', upload.single('file'), [
   body('assignmentId').not().isEmpty().withMessage('assignment Id is required'),
 ], authenticateAdminToken, Assignment.updateAssignment);
 
