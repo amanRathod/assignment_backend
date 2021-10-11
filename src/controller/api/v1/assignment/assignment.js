@@ -8,7 +8,14 @@ const { uploadFile } = require('../../../../../s3');
 
 exports.createAssignment = async(req, res) => {
   try {
-
+    // validate client data
+    const error = validationResult(req);
+    if (!error.isEmpty()) {
+      return res.status(422).json({
+        type: 'warning',
+        message: error.array()[0].msg,
+      });
+    }
     // get url from s3 bucket
     // upload file to s3
     const filePath = await uploadFile(req.file);

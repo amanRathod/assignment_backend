@@ -63,7 +63,7 @@ exports.evaluate = async(req, res) => {
     // validate client input data
     const error = validationResult(req);
     if (!error.isEmpty()) {
-      return res.status(201).json({
+      return res.status(422).json({
         type: 'warning',
         message: error.array()[0].msg,
       });

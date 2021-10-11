@@ -13,7 +13,7 @@ exports.login = async(req, res, next) => {
     // validate user input data
     const error = validationResult(req);
     if (!error.isEmpty()) {
-      return res.status(200).json({
+      return res.status(422).json({
         type: 'warning',
         message: error.array()[0].msg,
       });
@@ -25,7 +25,7 @@ exports.login = async(req, res, next) => {
     // verify user email
     const user = await User.findOne({email: email});
     if (!user) {
-      return res.status(200).json({
+      return res.status(201).json({
         type: 'error',
         message: 'User email or passowrd is incorrect',
       });
@@ -34,7 +34,7 @@ exports.login = async(req, res, next) => {
     // verify User password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(200).json({
+      return res.status(201).json({
         type: 'error',
         message: 'User email or passowrd is incorrect',
       });
@@ -149,7 +149,7 @@ exports.updateProfile = async(req, res) => {
       // check if registration_no is unique or not
       const registration_No = await User.findOne({ registration_no });
       if (registration_No) {
-        return res.status(200).json({
+        return res.status(201).json({
           type: 'warning',
           message: 'Registration number already exists',
         });
@@ -191,7 +191,7 @@ exports.updateGoogleProfile = async(req, res) => {
     const { email } = req.user;
     const userExists = await User.findOne({ email });
     if (!userExists) {
-      return res.status(400).json({
+      return res.status(201).json({
         type: 'error',
         message: 'User doesn\t exists',
       });
@@ -204,7 +204,7 @@ exports.updateGoogleProfile = async(req, res) => {
     // check if registration_no is unique or not
     const registration_No = await User.findOne({ registration_no });
     if (registration_No) {
-      return res.status(200).json({
+      return res.status(201).json({
         type: 'warning',
         message: 'Registration number already exists',
       });
