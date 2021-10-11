@@ -10,7 +10,7 @@ const User = require('../../../../model/user/user');
 function getGoogleAuthURL() {
   const rootUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
   const options = {
-    redirect_uri: `http://localhost:5000/${redirectURI}`,
+    redirect_uri: `https://assignment-managements.herokuapp.com/${redirectURI}`,
     client_id: process.env.GOOGLE_CLIENT_ID,
     access_type: 'offline',
     response_type: 'code',
@@ -37,7 +37,7 @@ const getGoogleToken = async(code) => {
       code,
       client_id: process.env.GOOGLE_CLIENT_ID,
       client_secret: process.env.GOOGLE_CLIENT_SECRET,
-      redirect_uri: `http://localhost:5000/${redirectURI}`,
+      redirect_uri: `https://assignment-managements.herokuapp.com/${redirectURI}`,
       grant_type: 'authorization_code',
     };
     const response = await axios.post(url, params);
@@ -90,9 +90,9 @@ app.get('/google', async(req, res) => {
 
     // redirect to dashboard if user have already filled the personal details
     if (user.registration_no) {
-      res.redirect('http://localhost:3000/dashboard');
+      res.redirect('https://assignment-management.netlify.app/dashboard');
     } else {
-      res.redirect('http://localhost:3000/personal-details');
+      res.redirect('https://assignment-management.netlify.app/personal-details');
     }
   } catch (error) {
     console.log(error);

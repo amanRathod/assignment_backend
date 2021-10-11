@@ -13,7 +13,7 @@ async function startServer() {
   ConnectDB();
 
   app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: 'https://assignment-management.netlify.app',
     credentials: true,
   }));
   app.use(cookieParser());
