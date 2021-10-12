@@ -85,8 +85,8 @@ app.get('/google', async(req, res) => {
     });
 
     // send the token to the client side as cookie
-    res.cookie('token', jwt_token, { httpOnly: false });
-    res.cookie('user', email, { httpOnly: false });
+    res.cookie('token', jwt_token, { httpOnly: false, domain: 'https://assignment-management.netlify.app'});
+    res.cookie('user', email, { httpOnly: false, domain: 'https://assignment-management.netlify.app'});
 
     // redirect to dashboard if user have already filled the personal details
     if (user.registration_no) {
