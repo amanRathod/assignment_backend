@@ -94,7 +94,7 @@ exports.register = async(req, res) => {
       password: hashedPassword,
       name,
       user_type,
-      avatar: 'https://assignment-management.s3.amazonaws.com/index.png',
+      avatar: 'https://blog-dev-sample.s3.amazonaws.com/index.png',
     });
 
     let user_role;
